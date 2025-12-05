@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_08_143007) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_05_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -273,6 +273,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_08_143007) do
     t.boolean "auto_sync_on_login", default: true, null: false
     t.datetime "latest_sync_activity_at", default: -> { "CURRENT_TIMESTAMP" }
     t.datetime "latest_sync_completed_at", default: -> { "CURRENT_TIMESTAMP" }
+    t.boolean "cash_subgroup_enabled", default: true, null: false
   end
 
   create_table "family_exports", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -586,6 +587,38 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_08_143007) do
     t.string "area_unit"
     t.jsonb "locked_attributes", default: {}
     t.string "subtype"
+  end
+
+  create_table "recurring_transactions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "family_id", null: false
+    t.uuid "account_id", null: false
+    t.string "name", null: false
+    t.decimal "amount", precision: 19, scale: 4, null: false
+    t.string "currency", null: false
+    t.uuid "category_id"
+    t.uuid "merchant_id"
+    t.string "kind", default: "standard", null: false
+    t.text "notes"
+    t.string "frequency", null: false
+    t.integer "interval", default: 1, null: false
+    t.integer "day_of_month"
+    t.integer "day_of_week"
+    t.date "next_occurrence_date", null: false
+    t.string "status", default: "active", null: false
+    t.date "start_date", null: false
+    t.date "end_date"
+    t.integer "end_after_occurrences"
+    t.integer "created_transactions_count", default: 0, null: false
+    t.datetime "last_executed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_recurring_transactions_on_account_id"
+    t.index ["category_id"], name: "index_recurring_transactions_on_category_id"
+    t.index ["family_id"], name: "index_recurring_transactions_on_family_id"
+    t.index ["merchant_id"], name: "index_recurring_transactions_on_merchant_id"
+    t.index ["next_occurrence_date"], name: "index_recurring_transactions_on_next_occurrence_date"
+    t.index ["status", "next_occurrence_date"], name: "idx_on_status_next_occurrence_date_348e747472"
+    t.index ["status"], name: "index_recurring_transactions_on_status"
   end
 
   create_table "rejected_transfers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
